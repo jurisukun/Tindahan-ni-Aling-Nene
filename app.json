@@ -4,7 +4,26 @@
     "web": {
       "bundler": "metro"
     },
-    "name": "trial",
-    "slug": "trial"
+    "name": "Tindahan ni Aling Nene",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "slug": "trial",
+    "android": {
+      "package": "com.jurisu_kun.trial",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "04bf51af-ef7c-419b-b172-b37d16c972a1"
+      }
+    }
   }
 }
