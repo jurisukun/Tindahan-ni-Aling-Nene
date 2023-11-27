@@ -14,8 +14,6 @@ import { useDispatch } from "react-redux";
 import {
   editInventory,
   addCapitalByDate,
-  getTotalCapital,
-  getTotalSales,
 } from "../redux/reducers/inventoryReducers";
 
 function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
@@ -76,11 +74,6 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                     ...updatedDetails,
                     stocks: Number(e),
                   });
-                  // setToUpdateDetails({
-                  //   ...toUpdateDetails,
-                  //   stocks: Number(e),
-                  //   capital: Number(e) * updatedDetails?.priceperpiece,
-                  // });
                 }}
                 style={styles.input}
                 keyboardType="numeric"
@@ -98,10 +91,6 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                       priceperpiece: Number(e),
                       capital: Number(e) * updatedDetails?.stocks,
                     });
-                    // setToUpdateDetails({
-                    //   ...toUpdateDetails,
-                    //   capital: Number(e) * updatedDetails?.stocks,
-                    // });
                   }}
                   keyboardType="numeric"
                   defaultValue={toUpdateDetails?.priceperpiece?.toFixed(2)}
@@ -233,8 +222,6 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                             capital: newCapital,
                           })
                         );
-                        // dispatch(getTotalCapital());
-                        // dispatch(getTotalSales());
                       })
                       .catch((err) => {
                         customAlert(`Error, ${err}`);
@@ -269,14 +256,6 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
     </View>
   );
 }
-
-// id	INTEGER,
-// item	TEXT,
-// capital NUMERIC,
-// price	NUMERIC,
-// priceperpiece NUMERIC,
-// stocks  NUMERIC,
-// date	TEXT,
 
 const styles = StyleSheet.create({
   centeredView: {

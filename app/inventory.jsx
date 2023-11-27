@@ -9,8 +9,6 @@ import { useQuery } from "react-query";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addInventory,
-  getTotalCapital,
-  getTotalSales,
   addCapitalByDate,
   deleteInventory,
 } from "../redux/reducers/inventoryReducers";
@@ -36,8 +34,6 @@ const Inventory = () => {
     await selectall("inventory")
       .then((res) => {
         dispatch(addInventory(res._array));
-        // dispatch(getTotalCapital());
-        // dispatch(getTotalSales());
       })
       .catch((err) => {
         customAlert("Error", err);

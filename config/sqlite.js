@@ -1,3 +1,4 @@
+import { add } from "date-fns";
 import * as SQLite from "expo-sqlite";
 
 // Open or create the database
@@ -39,39 +40,6 @@ export const createTable = () => {
   });
 };
 
-export const updateDatabase = () => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        `SELECT totalstocks FROM inventory;`,
-        [],
-
-        (_, result) => {
-          if (result) {
-            resolve(result);
-          } else {
-            reject(new Error("Failed to update database"));
-          }
-        }
-      );
-    });
-    // db.transaction((tx) => {
-    //   tx.executeSql(
-    //     `ALTER TABLE inventory ADD COLUMN totalstocks NUMERIC;`,
-    //     [],
-
-    //     (_, result) => {
-    //       if (result) {
-    //         resolve(result);
-    //       } else {
-    //         reject(new Error("Failed to update database"));
-    //       }
-    //     }
-    //   );
-    // });
-  });
-};
-
 // Add a record to the table
 export const addRecord = (item, price, date) => {
   return new Promise((resolve, reject) => {
@@ -91,21 +59,39 @@ export const addRecord = (item, price, date) => {
   });
 };
 
-export const addInventoryRecord = (item, capital, price, stocks, date) => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        `INSERT INTO inventory (item,capital, price, stocks, date) VALUES (?, ?, ?,?,?);`,
-        [item, capital, price, stocks, date],
-        (_, { rowsAffected, insertId }) => {
-          if (rowsAffected > 0) {
-            resolve(insertId);
-          } else {
-            reject(new Error("Failed to add record"));
-          }
+export const addInventoryRecord = (
+  item,
+  capital,
+  price,
+  priceperpiece,
+  stocks,
+  date,
+  resolve,
+  reject
+) => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      "INSERT INTO inventory (item, capital, price, priceperpiece, stocks,totalstocks, date) VALUES (?,?,?,?,?,?,?);",
+      [
+        item,
+        Number(capital),
+        Number(price),
+        Number(priceperpiece),
+        Number(stocks),
+        Number(stocks),
+        date,
+      ],
+      (_, { rowsAffected, insertId }) => {
+        if (rowsAffected) {
+          resolve(insertId);
+        } else {
+          reject("Failed to add record");
         }
-      );
-    });
+      },
+      (_, error) => {
+        reject(error);
+      }
+    );
   });
 };
 
@@ -300,30 +286,16 @@ export const addMultipleInventory = (records) => {
                 );
               });
             } else {
-              db.transaction((tx) => {
-                tx.executeSql(
-                  "INSERT INTO inventory (item, capital, price, priceperpiece, stocks,totalstocks, date) VALUES (?,?,?,?,?,?,?);",
-                  [
-                    item,
-                    Number(capital),
-                    Number(price),
-                    Number(priceperpiece),
-                    Number(stocks),
-                    Number(stocks),
-                    date,
-                  ],
-                  (_, { rowsAffected, insertId }) => {
-                    if (rowsAffected) {
-                      resolve(insertId);
-                    } else {
-                      reject("Failed to add record");
-                    }
-                  },
-                  (_, error) => {
-                    reject(error);
-                  }
-                );
-              });
+              addInventoryRecord(
+                item,
+                capital,
+                price,
+                priceperpiece,
+                stocks,
+                date,
+                resolve,
+                reject
+              );
             }
           }
         );

@@ -83,13 +83,6 @@ const Income = ({}) => {
                     )}`}
                   </Text>
                 </View>
-
-                {/* <Text className="text-slate-400  font-semibold">
-                {`Sale: ${item.total_transaction}`}
-              </Text>
-              <Text className="text-slate-400  font-semibold">
-                {`Earning: ${item.total_transaction - item.total_capital}`}
-              </Text> */}
               </View>
             </Pressable>
           );

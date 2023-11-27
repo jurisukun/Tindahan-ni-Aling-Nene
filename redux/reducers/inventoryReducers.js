@@ -15,19 +15,11 @@ export const inventorySlice = createSlice({
       let filteredpayload = [];
       for (let item of action.payload) {
         let duplicate = null;
-        // state.totalCapital += Number(item.stocks) * Number(item.priceperpiece);
-        // state.totalSales += Number(item.stocks) * Number(item.price);
-        // if (!item?.totalstocks) {
-        //   item.totalstocks = item.stocks;
-        // }
+
         state.totalCapital += Number(item.stocks) * Number(item.priceperpiece);
         state.totalSales += Number(item.stocks) * Number(item.price);
-        // else if (!item.totalstocks) {
-        //   state.totalSales += Number(Number(item.stocks) * Number(item.price));
-        // }
+
         if (state.inventory.length > 0) {
-          // item.id = state.inventory[state.inventory.length - 1].id + key + 1;
-          // key += 1;
           duplicate = state.inventory.find((inventoryitem) => {
             if (
               inventoryitem.item.toLowerCase() == item.item.toLowerCase() &&
@@ -50,7 +42,6 @@ export const inventorySlice = createSlice({
           item.price = Number(item.price);
           item.stocks = Number(item.stocks);
           item.capital = Number(item.capital);
-          // item.totalstocks = Number(item.totalstocks);
 
           filteredpayload.push(item);
         } else {

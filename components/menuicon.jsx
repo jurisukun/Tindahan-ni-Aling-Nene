@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 
 export default function MenuIcon({ onPress }) {

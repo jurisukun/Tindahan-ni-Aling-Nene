@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ToastAndroid,
   Alert,
-  Pressable,
 } from "react-native";
 
 import React, { useState } from "react";
@@ -27,7 +26,6 @@ import { updateInventory } from "../redux/reducers/inventoryReducers";
 import { getTotalTransactionsGroupByDate } from "../config/sqlite";
 import { addIncome } from "../redux/reducers/incomeReducers";
 
-// import { Menu, MenuItem, MenuDivider } from "react-native-material-menu";
 import {
   Menu,
   MenuOptions,
@@ -83,13 +81,6 @@ export const NewItem = ({
     500
   );
 
-  // function setterfunction(objProp) {
-  //   if (itemDebounceValue === null) return;
-  //   checkIfInInventory(inventory, itemDebounceValue);
-  //   setShowValidation(true);
-  //   setItemByDetails(objProp, itemDebounceValue);
-  // }
-
   useDebounceEffect(itemDebounceValue, getSuggestions, inventory);
 
   function getSuggestions(inventory) {
@@ -110,23 +101,6 @@ export const NewItem = ({
     }
     return true;
   }
-
-  // function checkIfInInventory(inventoryList, itemdetails) {
-  //   let isInInventory = null;
-  //   for (const item of inventoryList) {
-  //     if (item.item === itemdetails) {
-  //       isInInventory = item;
-  //       break;
-  //     }
-  //   }
-
-  //   if (isInInventory) {
-  //     setItemByDetails("price", isInInventory?.price);
-  //     setItemByDetails("inventoryId", isInInventory?.id);
-  //   }
-
-  //   if (!isInInventory) customAlert("Item is not in inventory");
-  // }
 
   const [date, setDate] = useState(new Date(Date()));
 
@@ -217,14 +191,7 @@ export const NewItem = ({
                 id="item"
               />
               {suggestions.length > 0 && (
-                <Menu
-                  opened={true}
-                  className="w-[200px]"
-
-                  // onBackdropPress={(e) => {
-                  //   setSuggestions([]);
-                  // }}
-                >
+                <Menu opened={true} className="w-[200px]">
                   <MenuTrigger />
                   <MenuOptions
                     style={{
@@ -261,11 +228,6 @@ export const NewItem = ({
                                   if (item.id !== itemdetails.id) {
                                     return item;
                                   }
-                                  // else {
-                                  //   return prev.find((item) => {
-                                  //     return item.id == itemdetails.id;
-                                  //   });
-                                  // }
                                 });
                               });
                             }
@@ -363,9 +325,7 @@ let newEntryItem = (prev) => ({
 
 const Entry = () => {
   const inventory = useSelector((state) => state.inventoryStates.inventory);
-  const totalCapital = useSelector(
-    (state) => state.inventoryStates.totalCapital
-  );
+
   const dispatch = useDispatch();
   const [items, setItems] = useState([
     {
@@ -475,7 +435,6 @@ const Entry = () => {
                 setShowValidation(false);
                 dispatch(updateInventory(items));
                 customAlert("Added");
-                //update income
 
                 getTotalTransactionsGroupByDate()
                   .then((res) => {

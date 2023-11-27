@@ -160,9 +160,7 @@ const MenuList = ({
           Import Data
         </MenuItem>
         <MenuDivider />
-        {/* {tableToDrop == "inventory" && (
-          <MenuItem onPress={updateDatabase}>Update Database</MenuItem>
-        )} */}
+
         <MenuItem onPress={deleteInventoryFunction}>{menuItemText}</MenuItem>
       </Menu>
     </View>

@@ -1,6 +1,6 @@
 import { View, TextInput, StyleSheet, Button } from "react-native";
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { searchTransaction } from "../redux/reducers/transactionReducers";
 import { searchInventory } from "../redux/reducers/inventoryReducers";
 

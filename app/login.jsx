@@ -4,7 +4,6 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
-  Button,
   ToastAndroid,
 } from "react-native";
 import React, { useState } from "react";
