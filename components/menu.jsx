@@ -3,14 +3,14 @@ import React from "react";
 import { Menu, MenuDivider, MenuItem } from "react-native-material-menu";
 import { deleteDatabase } from "../config/sqlite";
 import { useDispatch } from "react-redux";
-import { selectall, updateDatabase } from "../config/sqlite";
+import { selectall } from "../config/sqlite";
 import {
   addMultipleInventory,
   addMultipleTransactions,
 } from "../config/sqlite";
 import { addInventory } from "../redux/reducers/inventoryReducers";
 import { addTransaction } from "../redux/reducers/transactionReducers";
-
+import { deleteAllIncome } from "../redux/reducers/incomeReducers";
 import { ToastAndroid, Alert } from "react-native";
 
 import {
@@ -135,6 +135,7 @@ const MenuList = ({
                 dispatch(addInventory(data));
               } else {
                 dispatch(addTransaction(data));
+                dispatch(deleteAllIncome());
               }
             })
             .catch((err) => {

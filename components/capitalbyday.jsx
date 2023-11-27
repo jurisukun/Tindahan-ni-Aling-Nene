@@ -14,7 +14,7 @@ const CapitalbyDay = () => {
   const { isLoading, error } = useQuery("capitalbyydate", () => {
     getotalCapitalByDate()
       .then((res) => {
-        dispatch(addCapitalByDate(res._array));
+        dispatch(addCapitalByDate(res));
       })
       .catch((err) => {
         customAlert("Error", err);

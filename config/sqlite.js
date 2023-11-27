@@ -1,7 +1,7 @@
 import * as SQLite from "expo-sqlite";
 
 // Open or create the database
-const db = SQLite.openDatabase("app.db");
+const db = SQLite.openDatabase("newapp.db");
 
 export const deleteDatabase = (tablename) => {
   return new Promise((resolve, reject) => {
@@ -24,33 +24,18 @@ export const deleteDatabase = (tablename) => {
 
 // Create a table (if it doesn't exist)
 export const createTable = () => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      `CREATE TABLE transactions (
-	id	INTEGER,
-	item	TEXT,
-	price	NUMERIC,
-  priceperpiece NUMERIC,
-  quantity  NUMERIC,
-	date	TEXT,
-	PRIMARY KEY(id AUTOINCREMENT)
-)`
-    );
-  });
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS transactions (id	INTEGER PRIMARY KEY AUTOINCREMENT,item	TEXT,price	NUMERIC,priceperpiece NUMERIC,quantity  NUMERIC,date	TEXT);"
+      );
+    });
 
-  db.transaction((tx) => {
-    tx.executeSql(
-      `CREATE TABLE inventory (
-	id	INTEGER,
-	item	TEXT,
-  capital NUMERIC,
-	price	NUMERIC,
-  priceperpiece NUMERIC,
-  stocks  NUMERIC,
-	date	TEXT,
-	PRIMARY KEY(id AUTOINCREMENT)
-)`
-    );
+    db.transaction((tx) => {
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS inventory (id	INTEGER PRIMARY KEY AUTOINCREMENT,item	TEXT,capital NUMERIC,price	NUMERIC,priceperpiece NUMERIC,stocks  NUMERIC,totalstocks  NUMERIC,date	TEXT);"
+      );
+    });
   });
 };
 
@@ -200,11 +185,11 @@ export const addMultipleTransactions = (records, inventory, fromImport) => {
                     if (remainingquantity <= 0) break;
                     if (entry.stocks >= remainingquantity) {
                       entry.stocks -= remainingquantity;
-                      await updatefunc(entry);
                       remainingquantity = 0;
+                      await updatefunc(entry);
 
                       break;
-                    } else if (entry.stocks < Number(quantity)) {
+                    } else if (entry.stocks < remainingquantity) {
                       remainingquantity -= Number(entry.stocks);
                       entry.stocks = 0;
                       await updatefunc(entry);
@@ -290,8 +275,8 @@ export const addMultipleInventory = (records) => {
     let promiseperrecord = new Promise((resolve, reject) => {
       db.transaction((tx) => {
         tx.executeSql(
-          "SELECT * FROM inventory WHERE LOWER(item)=? AND priceperpiece=? AND price=? AND date=?;",
-          [item.toLowerCase(), Number(priceperpiece), Number(price), date],
+          "SELECT * FROM inventory WHERE item=? AND priceperpiece=? AND price=? AND date=?;",
+          [item, Number(priceperpiece), Number(price), date],
           (_, { rows }) => {
             if (rows.length > 0) {
               db.transaction((tx) => {
@@ -328,11 +313,14 @@ export const addMultipleInventory = (records) => {
                     date,
                   ],
                   (_, { rowsAffected, insertId }) => {
-                    if (rowsAffected > 0) {
+                    if (rowsAffected) {
                       resolve(insertId);
                     } else {
                       reject("Failed to add record");
                     }
+                  },
+                  (_, error) => {
+                    reject(error);
                   }
                 );
               });
@@ -370,7 +358,13 @@ export const selectall = (tablename) => {
   });
 };
 
-export const inventoryUpdate = (itemId, newdetails, updatepricing) => {
+export const inventoryUpdate = (
+  itemId,
+  newdetails,
+  updatepricing,
+  stocksdifference,
+  pricechanged
+) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
@@ -390,38 +384,62 @@ export const inventoryUpdate = (itemId, newdetails, updatepricing) => {
                 newdetails.capital,
                 newdetails.price,
                 newdetails.priceperpiece,
-                newdetails.stocks,
-                olddata.totalstocks - (olddata.stocks - newdetails.stocks),
+                olddata.stocks + stocksdifference,
+                olddata.totalstocks + stocksdifference,
                 newdetails.date,
                 Number(itemId),
               ];
-            } else {
+
+              if (pricechanged) executeSql();
+              else executeSql(resolve, reject);
+            }
+            if (!updatepricing) {
               sql =
-                "UPDATE inventory SET item =?, capital =?, priceperpiece=?, stocks=?,date=? WHERE id=?;";
+                "UPDATE inventory SET item =?, capital =?, price =?, priceperpiece=?, stocks=?,date=? WHERE id=?;";
+              params = [
+                newdetails.item,
+                newdetails.capital,
+                newdetails.price,
+                newdetails.priceperpiece,
+                olddata.stocks + stocksdifference,
+                newdetails.date,
+                Number(itemId),
+              ];
+              executeSql(resolve, reject);
+            }
+            if (pricechanged) {
+              sql =
+                "UPDATE inventory SET item =?, capital =?, priceperpiece=?,date=? WHERE item=? AND price=? AND priceperpiece=?;";
               params = [
                 newdetails.item,
                 newdetails.capital,
                 newdetails.priceperpiece,
-                newdetails.stocks,
                 newdetails.date,
-                Number(itemId),
+                olddata.item,
+                olddata.price,
+                olddata.priceperpiece,
               ];
+              executeSql(resolve, reject);
             }
+            function executeSql(resolve, reject) {
+              db.transaction((tx) => {
+                tx.executeSql(
+                  sql,
+                  params,
 
-            db.transaction((tx) => {
-              tx.executeSql(
-                sql,
-                params,
-
-                (_, { rowsAffected }) => {
-                  if (rowsAffected > 0) {
-                    resolve(rowsAffected);
-                  } else {
+                  (_, { rowsAffected }) => {
+                    if (rowsAffected > 0) {
+                      if (resolve) resolve(rowsAffected);
+                    } else {
+                      if (reject) reject("Failed to update record");
+                    }
+                  },
+                  (error) => {
                     reject("Failed to update record");
                   }
-                }
-              );
-            });
+                );
+              });
+            }
           } else {
             reject("Data not found");
           }
@@ -437,6 +455,26 @@ export const deleteRecord = (id) => {
       tx.executeSql(
         "DELETE FROM transactions WHERE id = ?;",
         [id],
+
+        (_, { rowsAffected }) => {
+          if (rowsAffected) {
+            resolve(rowsAffected);
+          } else {
+            reject("Failed to delete record");
+          }
+        }
+      );
+    });
+  });
+};
+
+export const deleteInventoryByDetails = (details) => {
+  const { item, price, priceperpiece } = details;
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "DELETE FROM inventory WHERE LOWER(item)=? AND price=? AND priceperpiece=?;",
+        [item.toLowerCase(), Number(price), Number(priceperpiece)],
 
         (_, { rowsAffected }) => {
           if (rowsAffected) {
@@ -497,7 +535,7 @@ export const getotalCapitalByDate = () => {
 
         (_, { rows }) => {
           if (rows) {
-            resolve(rows);
+            resolve(rows._array);
           } else {
             reject("Failed to get total");
           }

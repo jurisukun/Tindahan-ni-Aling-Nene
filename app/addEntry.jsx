@@ -216,200 +216,94 @@ export const NewItem = ({
                 }}
                 id="item"
               />
-              {
-                suggestions.length > 0 && (
-                  // <Menu
-                  //   className="w-auto"
-                  //   visible={true}
-                  //   onRequestClose={() => {
-                  //     setSuggestions([]);
-                  //   }}
-                  // >
-                  //   {suggestions.map((item, key) => (
-                  //     <React.Fragment key={key}>
-                  //       <MenuItem
-                  //         className="flex flex-row gap-x-4 items-center justify-center px-2 "
-                  //         onPress={() => {
-                  //           setShowValidation(true);
-                  //           if (
-                  //             items.find(
-                  //               (initem) => initem.inventoryId === item.id
-                  //             )
-                  //           ) {
-                  //             customAlert("Items merged");
-                  //             setItems((prev) => {
-                  //               return prev.map((initem) => {
-                  //                 if (initem.inventoryId === item.id) {
-                  //                   initem.quantity += Number(
-                  //                     itemdetails.quantity
-                  //                   );
-                  //                 }
-                  //                 return initem;
-                  //               });
-                  //             });
-                  //             setItemDetails((prev) => {
-                  //               return prev.filter(
-                  //                 (item) => item.id !== itemdetails.id
-                  //               );
-                  //             });
+              {suggestions.length > 0 && (
+                <Menu
+                  opened={true}
+                  className="w-[200px]"
 
-                  //             return;
-                  //           }
-                  //           setItemByDetails("item", item.item);
-                  //           setItemByDetails("price", item.price);
-                  //           setItemByDetails(
-                  //             "priceperpiece",
-                  //             item.priceperpiece
-                  //           );
-                  //           setItemByDetails("inventoryId", item.id);
-                  //           setSuggestions([]);
-                  //         }}
-                  //       >
-                  //         {`${item.item}   Stocks: ${item.stocks}   Price: ₱${item.priceperpiece}`}
-                  //       </MenuItem>
-                  //       <MenuDivider />
-                  //     </React.Fragment>
-                  //   ))}
-                  // </Menu>
-                  <Menu
-                    opened={true}
-                    onBackdropPress={(e) => {
-                      setSuggestions([]);
+                  // onBackdropPress={(e) => {
+                  //   setSuggestions([]);
+                  // }}
+                >
+                  <MenuTrigger />
+                  <MenuOptions
+                    style={{
+                      width: 300,
+                      backgroundColor: "white",
+                      borderBottom: "1px solid #ccc",
                     }}
                   >
-                    <MenuTrigger />
-                    <MenuOptions>
-                      <ScrollView className="max-h-[100px]">
-                        {suggestions.map((item, key) => (
-                          <MenuOption
-                            onSelect={() => {
-                              setShowValidation(true);
-                              if (
-                                items.find(
-                                  (initem) => initem.inventoryId === item.id
-                                )
-                              ) {
-                                customAlert("Items merged");
-                                setItems((prev) => {
-                                  return prev.map((initem) => {
-                                    if (initem.inventoryId === item.id) {
-                                      initem.quantity += Number(
-                                        itemdetails.quantity
-                                      );
-                                    }
-                                    return initem;
-                                  });
+                    <ScrollView className="max-h-[100px] w-full">
+                      {suggestions.map((item, key) => (
+                        <MenuOption
+                          onSelect={() => {
+                            setShowValidation(true);
+                            if (
+                              items.find(
+                                (initem) => initem.inventoryId === item.id
+                              ) &&
+                              !itemdetails.inventoryId
+                            ) {
+                              customAlert("Items merged");
+                              setItems((prev) => {
+                                return prev.map((initem) => {
+                                  if (initem.inventoryId === item.id) {
+                                    initem.quantity =
+                                      Number(initem.quantity) +
+                                      Number(itemdetails.quantity);
+                                  }
+                                  return initem;
                                 });
-                                setItemDetails((prev) => {
-                                  return prev.filter(
-                                    (item) => item.id !== itemdetails.id
-                                  );
-                                });
+                              });
 
-                                return;
-                              }
-                              setItemByDetails("item", item.item);
-                              setItemByDetails("price", item.price);
-                              setItemByDetails(
-                                "priceperpiece",
-                                item.priceperpiece
-                              );
-                              setItemByDetails("inventoryId", item.id);
-                              setSuggestions([]);
-                            }}
-                            key={key}
-                            className="flex flex-row gap-x-4 justify-evenly"
+                              setItemDetails((prev) => {
+                                return prev.filter((item) => {
+                                  if (item.id !== itemdetails.id) {
+                                    return item;
+                                  }
+                                  // else {
+                                  //   return prev.find((item) => {
+                                  //     return item.id == itemdetails.id;
+                                  //   });
+                                  // }
+                                });
+                              });
+                            }
+
+                            setItemByDetails("item", item.item);
+                            setItemByDetails("price", item.price);
+                            setItemByDetails(
+                              "priceperpiece",
+                              item.priceperpiece
+                            );
+                            setItemByDetails("inventoryId", item.id);
+                            setSuggestions([]);
+                          }}
+                          key={key}
+                          className="flex flex-row gap-x-4 justify-evenly"
+                        >
+                          <Text
+                            numberOfLines={1}
+                            className="self-start text-start text-base font-semibold w-[35%] block whitespace-nowrap text-ellipsis"
                           >
-                            <Text className="text-start text-base font-semibold">
-                              {item.item}
-                            </Text>
-                            <Text className="text-green-500 text-center font-semibold">{`₱${item.priceperpiece.toFixed(
-                              2
-                            )}`}</Text>
-                            <Text
-                              className={`${
-                                item.stocks < 11
-                                  ? "text-red-500"
-                                  : "text-orange-500"
-                              } font-semibold text-end`}
-                            >{`Stocks: ${item.stocks}`}</Text>
-                          </MenuOption>
-                        ))}
-                      </ScrollView>
-                    </MenuOptions>
-                  </Menu>
-                )
-                // (
-                // <View className="flex flex-col items-center justify-center absolute left-0 bottom-full drop-shadow-lg w-[280px] rounded-lg p-2 backdrop-blur-lg shadow-lg bg-white max-h-[80px]">
-                //   <View className="relative w-full  flex justify-center items-center">
-                //     <ScrollView
-                //       contentContainerStyle={{
-                //         justifyContent: "center",
-                //         display: "flex",
-                //         flexDirection: "column",
-                //         alignItems: "center",
-                //       }}
-                //       className=" gap-y-1 w-full z-50 "
-                //     >
-                //       {suggestions.map((item, key) => (
-                //         <Pressable
-                //           key={key}
-                //           className="w-[95%] flex flex-row items-center justify-center gap-x-2 border border-slate-300 shadow-md rounded-md h-[30px] "
-                //           onPress={() => {
-                //             setShowValidation(true);
-                //             if (
-                //               items.find(
-                //                 (initem) => initem.inventoryId === item.id
-                //               )
-                //             ) {
-                //               customAlert("Items merged");
-                //               setItems((prev) => {
-                //                 return prev.map((initem) => {
-                //                   if (initem.inventoryId === item.id) {
-                //                     initem.quantity += Number(
-                //                       itemdetails.quantity
-                //                     );
-                //                   }
-                //                   return initem;
-                //                 });
-                //               });
-                //               setItemDetails((prev) => {
-                //                 return prev.filter(
-                //                   (item) => item.id !== itemdetails.id
-                //                 );
-                //               });
-
-                //               return;
-                //             }
-                //             setItemByDetails("item", item.item);
-                //             setItemByDetails("price", item.price);
-                //             setItemByDetails(
-                //               "priceperpiece",
-                //               item.priceperpiece
-                //             );
-                //             setItemByDetails("inventoryId", item.id);
-                //             setSuggestions([]);
-                //           }}
-                //         >
-                //           <Text className="text-base">{item?.item}</Text>
-                //           <Text className="text-base">{item?.date}</Text>
-                //           <Text className="text-base">
-                //             {item?.stocks.toString()}
-                //           </Text>
-                //           <Text className="text-base">
-                //             {item?.priceperpiece?.toString()}
-                //           </Text>
-                //           <Text className="text-base">
-                //             {item?.price.toString()}
-                //           </Text>
-                //         </Pressable>
-                //       ))}
-                //     </ScrollView>
-                //   </View>
-                // </View>
-
-                // )
-              }
+                            {item.item}
+                          </Text>
+                          <Text className="text-green-500 text-center font-semibold">{`₱${item.priceperpiece.toFixed(
+                            2
+                          )}`}</Text>
+                          <Text
+                            className={`text-end ${
+                              item.stocks < 11
+                                ? "text-red-500"
+                                : "text-orange-500"
+                            } font-semibold text-end`}
+                          >{`Stocks: ${item.stocks}`}</Text>
+                        </MenuOption>
+                      ))}
+                    </ScrollView>
+                  </MenuOptions>
+                </Menu>
+              )}
             </View>
             <View className="w-1/2 flex flex-row max-w-[50%] items-center justify-center px-2">
               <View
@@ -564,7 +458,7 @@ const Entry = () => {
             }
 
             addMultipleTransactions(items, inventory)
-              .then((res) => {
+              .then(() => {
                 dispatch(addTransaction(items));
 
                 setItems([

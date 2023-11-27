@@ -1,9 +1,19 @@
-import { View, Text, FlatList, Button, Pressable } from "react-native";
-import React, { useEffect, useState } from "react";
-import { selectall } from "../config/sqlite";
+import { View, Text, FlatList, Pressable, Alert } from "react-native";
+import React, { useState } from "react";
+import {
+  selectall,
+  deleteInventoryByDetails,
+  getotalCapitalByDate,
+} from "../config/sqlite";
 import { useQuery } from "react-query";
 import { useSelector, useDispatch } from "react-redux";
-import { addInventory } from "../redux/reducers/inventoryReducers";
+import {
+  addInventory,
+  getTotalCapital,
+  getTotalSales,
+  addCapitalByDate,
+  deleteInventory,
+} from "../redux/reducers/inventoryReducers";
 import { customAlert } from "./addEntry";
 import InventoryModal from "../components/inventoryModal";
 import Drowpdown from "../components/dropdown";
@@ -26,6 +36,8 @@ const Inventory = () => {
     await selectall("inventory")
       .then((res) => {
         dispatch(addInventory(res._array));
+        // dispatch(getTotalCapital());
+        // dispatch(getTotalSales());
       })
       .catch((err) => {
         customAlert("Error", err);
@@ -51,9 +63,7 @@ const Inventory = () => {
   if (inventory.length <= 0) {
     return (
       <View className="h-full w-full justify-center items-center">
-        <Text className="text-center text-lg tracking-wider font-semibold text-slate-400">
-          No Inventory Data
-        </Text>
+        <Text className="text-slate-400  font-semibold">No data available</Text>
       </View>
     );
   }
@@ -70,10 +80,38 @@ const Inventory = () => {
     });
   });
 
-  let renderItem = ({ item }) => {
+  function deleteAlert(item) {
+    Alert.alert("Delete", "Do you want to this delete item in inventory?", [
+      {
+        text: "Cancel",
+      },
+      {
+        text: "Yes",
+        onPress: () => {
+          deleteInventoryByDetails({
+            item: item.item,
+            price: item.price,
+            priceperpiece: item.priceperpiece,
+          })
+            .then(() => {
+              customAlert("Item deleted");
+              dispatch(deleteInventory(item.id));
+              getotalCapitalByDate().then((totalCapital) => {
+                dispatch(addCapitalByDate(totalCapital));
+              });
+            })
+            .catch((err) => {
+              customAlert(err);
+            });
+        },
+      },
+    ]);
+  }
+
+  let renderItem = ({ item, key }) => {
     return (
       <Pressable
-        key={item?.id}
+        key={key}
         style={{
           minWidth: "90%",
           width: "90%",
@@ -93,13 +131,20 @@ const Inventory = () => {
         onPress={() => {
           setToUpdate(item);
         }}
+        onLongPress={() => {
+          deleteAlert(item);
+        }}
       >
-        <View className="flex flex-row max-w-[100px] flex-nowrap overflow-hidden h-full items-center justify-center">
-          <Text className="text-slate-900 font-bold text-start whitespace-nowrap w-full flex-nowrap  overflow-hidden">
+        <View className="flex flex-row max-w-[130px] flex-nowrap overflow-hidden h-full items-center justify-center">
+          <Text
+            numberOfLines={1}
+            // ellipsizeMode="tail"
+            className="text-slate-900  font-bold text-sm text-start whitespace-nowrap w-full flex-nowrap   overflow-hidden"
+          >
             {item?.item}
           </Text>
         </View>
-        <View className="flex flex-row"></View>
+
         <View className="flex flex-col items-center justify-center">
           <Text className="text-slate-600">Capital </Text>
           <Text className="font-semibold">{`₱${item?.priceperpiece?.toFixed(

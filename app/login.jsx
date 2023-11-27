@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { useFonts } from "expo-font";
-import { selectall, deleteRecord, createTable } from "../config/sqlite";
+import { selectall, deleteRecord } from "../config/sqlite";
 
 import SearchBar from "../components/searchbar";
 import Total from "./total";
@@ -21,8 +21,6 @@ import {
   addTransaction,
   deleteTransaction,
 } from "../redux/reducers/transactionReducers";
-
-createTable();
 
 let selected = null;
 
@@ -58,6 +56,14 @@ const Dashboard = () => {
         <Text className="text-center text-sm tracking-wider text-slate-400">{`An error has occurred: ${error?.message}`}</Text>
       </View>
     );
+
+  if (records.length <= 0) {
+    return (
+      <View className="h-full w-full justify-center items-center">
+        <Text className="text-slate-400  font-semibold">No data available</Text>
+      </View>
+    );
+  }
 
   const showAlert = (id) => {
     Alert.alert("Delete", "Are you sure you want to delete this item?", [

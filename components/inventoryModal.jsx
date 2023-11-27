@@ -8,10 +8,15 @@ import {
   TextInput,
 } from "react-native";
 import React from "react";
-import { inventoryUpdate } from "../config/sqlite";
+import { inventoryUpdate, getotalCapitalByDate } from "../config/sqlite";
 import { customAlert } from "../app/addEntry";
 import { useDispatch } from "react-redux";
-import { editInventory } from "../redux/reducers/inventoryReducers";
+import {
+  editInventory,
+  addCapitalByDate,
+  getTotalCapital,
+  getTotalSales,
+} from "../redux/reducers/inventoryReducers";
 
 function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
   const dispatch = useDispatch();
@@ -24,7 +29,9 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
     stocks: toUpdateDetails?.stocks,
     date: toUpdateDetails?.date,
   });
-  const [prevstocks, setPrevStocks] = React.useState(toUpdateDetails?.stocks);
+  const prevstocks = toUpdateDetails?.stocks;
+  const prevprice = toUpdateDetails?.price;
+  const prevpriceperpiece = toUpdateDetails?.priceperpiece;
   return (
     <View>
       <Modal
@@ -55,6 +62,7 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                     capital: Number(e),
                   });
                 }}
+                maxLength={7}
                 style={styles.input}
                 keyboardType="numeric"
                 defaultValue={toUpdateDetails?.capital?.toString()}
@@ -68,6 +76,11 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                     ...updatedDetails,
                     stocks: Number(e),
                   });
+                  // setToUpdateDetails({
+                  //   ...toUpdateDetails,
+                  //   stocks: Number(e),
+                  //   capital: Number(e) * updatedDetails?.priceperpiece,
+                  // });
                 }}
                 style={styles.input}
                 keyboardType="numeric"
@@ -81,9 +94,14 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                   className="w-1/2 h-[30px] border border-black rounded-md px-2"
                   onChangeText={(e) => {
                     setUpdatedDetails({
-                      ...toUpdateDetails,
+                      ...updatedDetails,
                       priceperpiece: Number(e),
+                      capital: Number(e) * updatedDetails?.stocks,
                     });
+                    // setToUpdateDetails({
+                    //   ...toUpdateDetails,
+                    //   capital: Number(e) * updatedDetails?.stocks,
+                    // });
                   }}
                   keyboardType="numeric"
                   defaultValue={toUpdateDetails?.priceperpiece?.toFixed(2)}
@@ -132,6 +150,8 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
               <Pressable
                 style={[styles.button, styles.buttonOpen]}
                 onPress={() => {
+                  let stocksDiff =
+                    updatedDetails?.stocks - toUpdateDetails?.stocks;
                   if (prevstocks !== updatedDetails?.stocks) {
                     Alert.alert(
                       "Stocks changed",
@@ -140,7 +160,16 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                         {
                           text: "No",
                           onPress: () => {
-                            updateinventory();
+                            let changed;
+                            if (
+                              prevpriceperpiece !==
+                              updatedDetails?.priceperpiece
+                            ) {
+                              changed = true;
+                            } else {
+                              changed = false;
+                            }
+                            updateinventory(changed, stocksDiff);
                           },
                         },
                         {
@@ -149,13 +178,15 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                             let newCapital =
                               updatedDetails.stocks *
                               updatedDetails.priceperpiece;
+                            console.log(newCapital);
                             inventoryUpdate(
                               updatedDetails?.id,
                               {
                                 ...updatedDetails,
                                 capital: newCapital,
                               },
-                              true
+                              true,
+                              stocksDiff
                             )
                               .then(() => {
                                 setToUpdateDetails();
@@ -164,8 +195,12 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                                   editInventory({
                                     ...updatedDetails,
                                     capital: newCapital,
+                                    changepricing: true,
                                   })
                                 );
+                                getotalCapitalByDate().then((res) => {
+                                  dispatch(addCapitalByDate(res));
+                                });
                               })
                               .catch((err) => {
                                 customAlert(`Error, ${err}`);
@@ -175,12 +210,45 @@ function InventoryModal({ toUpdateDetails, setToUpdateDetails }) {
                       ],
                       {}
                     );
-                  } else {
-                    updateinventory();
+                  }
+                  if (
+                    updatedDetails.price != prevprice ||
+                    updatedDetails.priceperpiece != prevpriceperpiece
+                  ) {
+                    let newCapital =
+                      updatedDetails.stocks * updatedDetails.priceperpiece;
+                    inventoryUpdate(
+                      updatedDetails?.id,
+                      updatedDetails,
+                      null,
+                      null,
+                      true
+                    )
+                      .then(() => {
+                        setToUpdateDetails();
+                        customAlert("Success, Item Updated");
+                        dispatch(
+                          editInventory({
+                            ...updatedDetails,
+                            capital: newCapital,
+                          })
+                        );
+                        // dispatch(getTotalCapital());
+                        // dispatch(getTotalSales());
+                      })
+                      .catch((err) => {
+                        customAlert(`Error, ${err}`);
+                      });
                   }
 
-                  function updateinventory() {
-                    inventoryUpdate(updatedDetails?.id, updatedDetails)
+                  function updateinventory(changed, stocksDiff) {
+                    inventoryUpdate(
+                      updatedDetails?.id,
+                      updatedDetails,
+                      false,
+                      stocksDiff,
+                      changed
+                    )
                       .then(() => {
                         setToUpdateDetails();
                         customAlert("Success, Item Updated");

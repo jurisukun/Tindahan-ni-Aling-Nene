@@ -36,6 +36,14 @@ const Income = ({}) => {
       </View>
     );
   }
+
+  if (incomeState.length <= 0) {
+    return (
+      <View className="h-full w-full flex justify-center items-center">
+        <Text className="text-slate-400  font-semibold">No data available</Text>
+      </View>
+    );
+  }
   return (
     <ScrollView className="w-full h-full flex gap-y-2 p-4">
       {incomeState?.length > 0 &&

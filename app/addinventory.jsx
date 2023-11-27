@@ -2,14 +2,18 @@ import { View, Button, TouchableOpacity, Text, TextInput } from "react-native";
 import React, { useState, useRef } from "react";
 import { ScrollView } from "react-native-gesture-handler";
 import { addMultipleInventory } from "../config/sqlite";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { FontAwesome } from "@expo/vector-icons";
 import { style, customAlert } from "./addEntry";
 import { useDebounce, useDebounceEffect } from "../components/debounceInput";
 import { useSelector, useDispatch } from "react-redux";
-import { addInventory } from "../redux/reducers/inventoryReducers";
+import {
+  addCapitalByDate,
+  addInventory,
+} from "../redux/reducers/inventoryReducers";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { showAlert } from "./addEntry";
+import { getotalCapitalByDate } from "../config/sqlite";
 
 import { Fontisto } from "@expo/vector-icons";
 
@@ -19,7 +23,6 @@ export const NewInventoryItem = ({
   setItemDetails,
   showValidation,
   setShowValidation,
-  stocksRef,
 }) => {
   const [itemDebounceValue, setItemDebounceValue] = useDebounce(
     itemdetails.item,
@@ -84,6 +87,7 @@ export const NewInventoryItem = ({
               ? (item.capital = item.stocks * item.priceperpiece)
               : null;
           }
+
           item[itemProperty] = newItemDetail;
         }
         return item;
@@ -93,6 +97,7 @@ export const NewInventoryItem = ({
 
   const priceRef = useRef(itemdetails.priceperpiece);
   const capitalRef = useRef(itemdetails.capital);
+  const stockRef = useRef(itemdetails.stocks);
 
   const [stocksPlaceholder, setStocksPlaceholder] = useState(
     itemdetails.stocks.toString()
@@ -121,7 +126,7 @@ export const NewInventoryItem = ({
           <View className="flex flex-row justify-center items-center w-[25%] px-2">
             <Text className="text-center">Pcs:</Text>
             <TextInput
-              ref={stocksRef}
+              ref={stockRef}
               onChangeText={(text) => {
                 setShowValidation(true);
                 setItemByDetails("stocks", text);
@@ -246,7 +251,6 @@ const AddInventory = () => {
     },
   ]);
   const [showValidation, setShowValidation] = useState(false);
-  const allRef = [];
 
   const checkNullItem = (itemsToAddInventory) => {
     for (const item of itemsToAddInventory) {
@@ -258,7 +262,17 @@ const AddInventory = () => {
         !item.capital
       ) {
         setShowValidation(true);
-        return true;
+        return {
+          result: true,
+          message: "Please fill in all fields",
+        };
+      }
+      if (item.priceperpiece >= item.price) {
+        setShowValidation(true);
+        return {
+          result: true,
+          message: "Selling price must be higher than capital",
+        };
       }
     }
     return false;
@@ -280,7 +294,7 @@ const AddInventory = () => {
                 item: null,
                 capital: null,
                 price: null,
-                priceperpiece: 0,
+                priceperpiece: null,
                 stocks: 1,
                 date: format(new Date(Date()), "MM/dd/yyy"),
               },
@@ -291,8 +305,6 @@ const AddInventory = () => {
 
       <ScrollView>
         {newItem?.map((item, key) => {
-          const stocksRef = useRef(item.stocks);
-          allRef.push(stocksRef);
           return (
             <NewInventoryItem
               key={key}
@@ -301,7 +313,6 @@ const AddInventory = () => {
               setItemDetails={setNewItem}
               setShowValidation={setShowValidation}
               showValidation={showValidation}
-              stocksRef={stocksRef}
             />
           );
         })}
@@ -309,16 +320,19 @@ const AddInventory = () => {
       <View className="mt-4">
         <Button
           onPress={() => {
-            if (checkNullItem(newItem)) {
-              customAlert("Please fill out all fields");
+            const { result, message } = checkNullItem(newItem);
+            if (result) {
+              customAlert(message);
               return;
             }
             addMultipleInventory(newItem)
               .then(() => {
-                dispatch(addInventory(newItem));
-                allRef.forEach((item) => {
-                  item.current.clear();
+                getotalCapitalByDate().then((totalCapital) => {
+                  dispatch(addCapitalByDate(totalCapital));
                 });
+
+                dispatch(addInventory(newItem));
+
                 setNewItem([
                   {
                     id: 0,

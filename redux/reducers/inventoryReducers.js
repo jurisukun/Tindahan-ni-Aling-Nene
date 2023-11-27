@@ -15,18 +15,19 @@ export const inventorySlice = createSlice({
       let filteredpayload = [];
       for (let item of action.payload) {
         let duplicate = null;
+        // state.totalCapital += Number(item.stocks) * Number(item.priceperpiece);
+        // state.totalSales += Number(item.stocks) * Number(item.price);
+        // if (!item?.totalstocks) {
+        //   item.totalstocks = item.stocks;
+        // }
         state.totalCapital += Number(item.stocks) * Number(item.priceperpiece);
         state.totalSales += Number(item.stocks) * Number(item.price);
-        // if (item.totalstocks) {
-        //   state.totalSales += Number(
-        //     Number(item.totalstocks) * Number(item.price)
-        //   );
-        // } else if (!item.totalstocks) {
+        // else if (!item.totalstocks) {
         //   state.totalSales += Number(Number(item.stocks) * Number(item.price));
         // }
         if (state.inventory.length > 0) {
-          item.id = state.inventory[state.inventory.length - 1].id + key + 1;
-          key += 1;
+          // item.id = state.inventory[state.inventory.length - 1].id + key + 1;
+          // key += 1;
           duplicate = state.inventory.find((inventoryitem) => {
             if (
               inventoryitem.item.toLowerCase() == item.item.toLowerCase() &&
@@ -38,6 +39,8 @@ export const inventorySlice = createSlice({
               inventoryitem.date = item.date;
 
               return inventoryitem;
+            } else {
+              item.id = state.inventory.length;
             }
           });
         }
@@ -60,11 +63,14 @@ export const inventorySlice = createSlice({
     },
     deleteInventory: (state, action) => {
       state.inventory = state.inventory.filter(
-        (item) => item.id !== action.payload.id
+        (item) => item.id !== action.payload
       );
     },
     deleteAllInventory: (state) => {
       state.inventory = [];
+      state.capitalByDate = [];
+      state.totalCapital = 0;
+      state.totalSales = 0;
     },
     updateInventory: (state, action) => {
       state.inventory = state.inventory.map((inventoryitem) => {
@@ -82,12 +88,14 @@ export const inventorySlice = createSlice({
     editInventory: (state, action) => {
       state.inventory = state.inventory.map((inventoryitem) => {
         if (inventoryitem.id == action.payload.id) {
-          state.totalCapital -=
-            (inventoryitem.stocks - action.payload.stocks) *
-            inventoryitem.priceperpiece;
-          state.totalSales -=
-            (inventoryitem.stocks - action.payload.stocks) *
-            inventoryitem.price;
+          if (action.payload.changepricing) {
+            state.totalCapital -=
+              inventoryitem.stocks * inventoryitem.priceperpiece;
+            state.totalCapital +=
+              action.payload.priceperpiece * action.payload.stocks;
+            state.totalSales -= inventoryitem.stocks * inventoryitem.price;
+            state.totalSales += action.payload.price * action.payload.stocks;
+          }
           return action.payload;
         }
         return inventoryitem;
@@ -110,8 +118,22 @@ export const inventorySlice = createSlice({
         });
       }
     },
+    getTotalCapital: (state) => {
+      let total = 0;
+      state.inventory.forEach((item) => {
+        total += Number(item.priceperpiece) * Number(item.totalstocks);
+      });
+      state.totalCapital = total;
+    },
+    getTotalSales: (state) => {
+      let total = 0;
+      state.inventory.forEach((item) => {
+        total += Number(item.price) * Number(item.totalstocks);
+      });
+      state.totalSales = total;
+    },
     addCapitalByDate: (state, action) => {
-      state.capitalByDate = state.capitalByDate.concat(action.payload);
+      state.capitalByDate = action.payload;
     },
     searchInventory: (state, action) => {
       state.filter = action.payload;
@@ -128,5 +150,7 @@ export const {
   sortInventory,
   addCapitalByDate,
   searchInventory,
+  getTotalCapital,
+  getTotalSales,
 } = inventorySlice.actions;
 export default inventorySlice.reducer;

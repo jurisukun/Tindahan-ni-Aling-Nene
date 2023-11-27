@@ -1,5 +1,5 @@
 import * as SplashScreen from "expo-splash-screen";
-import React from "react";
+import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 
@@ -7,7 +7,7 @@ import { Provider } from "react-redux";
 import store from "../redux/store";
 
 import { TabComponent } from "./tab";
-import { createTable } from "../config/sqlite";
+
 import Context from "./context";
 import InventoryTab from "./inventoryTab";
 
@@ -19,13 +19,21 @@ import { deleteAllTransaction } from "../redux/reducers/transactionReducers";
 import { deleteAllIncome } from "../redux/reducers/incomeReducers";
 
 import { MenuProvider } from "react-native-popup-menu";
-createTable();
+
+import { createTable } from "../config/sqlite";
+import { Alert } from "react-native";
+
 const Drawer = createDrawerNavigator();
 SplashScreen.preventAutoHideAsync();
+createTable()
+  .then((res) => {
+    setTimeout(SplashScreen.hideAsync, 3000);
+  })
+  .catch((err) => {
+    Alert.alert("Error", err.message);
+  });
 
 const DrawerMenu = () => {
-  setTimeout(SplashScreen.hideAsync, 10000);
-
   const [visible, setMenuVisible] = React.useState(false);
   const [trvisible, setTrMenuVisible] = React.useState(false);
 
@@ -47,10 +55,7 @@ const DrawerMenu = () => {
                         onRequestClose={() => setMenuVisible(false)}
                         menuItemText="Delete Inventory"
                         tableToDrop="inventory"
-                        reducerToDispatch={[
-                          deleteAllInventory,
-                          deleteAllIncome,
-                        ]}
+                        reducerToDispatch={[deleteAllInventory]}
                       />
                     ) : (
                       <MenuIcon onPress={() => setMenuVisible(true)} />
@@ -70,7 +75,10 @@ const DrawerMenu = () => {
                         onRequestClose={() => setTrMenuVisible(false)}
                         menuItemText="Delete Transactions"
                         tableToDrop="transactions"
-                        reducerToDispatch={[deleteAllTransaction]}
+                        reducerToDispatch={[
+                          deleteAllTransaction,
+                          deleteAllIncome,
+                        ]}
                       />
                     ) : (
                       <MenuIcon onPress={() => setTrMenuVisible(true)} />

@@ -1,11 +1,10 @@
 import Inventory from "./inventory";
 import AddInventory from "./addinventory";
 import CapitalbyDay from "../components/capitalbyday";
-import Income from "./income";
+import { Fontisto } from "@expo/vector-icons";
 import { TabGroup } from "./tab";
 import { Ionicons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Fontisto } from "@expo/vector-icons";
 
 const inventoryTabScreen = [
   {
@@ -20,12 +19,7 @@ const inventoryTabScreen = [
     package: MaterialIcons,
     icon: "addchart",
   },
-  {
-    name: "Daily Income",
-    component: Income,
-    package: Fontisto,
-    icon: "money-symbol",
-  },
+
   {
     name: "Capital/Day",
     component: CapitalbyDay,
